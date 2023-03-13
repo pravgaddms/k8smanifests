@@ -1,0 +1,59 @@
+kubectl run nginx --image=nginx --restart=Never
+kubectl get pods
+=====
+Killing" Containers - Solution
+Run Pod with a web service (e.g. httpd) - kubectl run web --image registry.redhat.io/rhscl/httpd-24-rhel7
+Verify the web service is running with the ps command - kubectl exec web -- ps
+Check how many restarts the pod has performed - kubectl get po web
+Kill the web service process -kubectl exec web -- kill 1
+Check how many restarts the pod has performed - kubectl get po web
+Verify again the web service is running - kubectl exec web -- ps
+==================================
+kubectl run nginx --image=nginx --restart=Never --port=80 --labels="app=dev-nginx"
+
+cat << EOF > nginx-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  selector:
+    app: dev-nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 9372
+EOF
+===============================================
+cat >> rs.yaml <<EOL
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: web
+  labels:
+    app: somewebapp
+    type: web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      type: web
+  template:
+    metadata:
+      labels:
+        type: web
+    spec:
+      containers:
+      - name: httpd
+        image: registry.redhat.io/rhscl/httpd-24-rhel7
+EOL
+
+kubectl apply -f rs.yaml
+kubectl get rs
+kubectl delete po <POD_NAME>
+The same number of Pods. Since we defined 2 replicas, the ReplicaSet will make sure to create another Pod that will replace the one you've deleted.
+kubectl delete -f rs.yaml
+kubectl get rs
+===================================================
+
+=====================================================
